@@ -32,7 +32,7 @@ public class ScoreBoardHelper {
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, name);
+            ps.setString(1, GameState.difficulty.name());
             ps.setInt(2, seconds);
             ps.setString(3, LocalDate.now().toString());
             ps.executeUpdate();
@@ -44,7 +44,7 @@ public class ScoreBoardHelper {
 
     public static List<String> getScores() {
         List<String> list = new ArrayList<>();
-        String sql = "SELECT * FROM scoreboard ORDER BY time_taken ASC";
+        String sql = "SELECT * FROM scoreboard WHERE difficulty=? ORDER BY time_taken ASC";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              Statement st = conn.createStatement();

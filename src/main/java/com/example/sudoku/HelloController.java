@@ -65,12 +65,16 @@ public class HelloController {
     }
 
     public void startNewGame() {
+        btnSave.setDisable(false);
+        btnClear.setDisable(false);
+
         startTime = System.currentTimeMillis();
-        int[][] puzzle = DatabaseHelper.getRandomPuzzle();
+        int[][] puzzle = DatabaseHelper.getRandomPuzzle(GameState.difficulty);
 
         GameState.initialBoard = new int[9][9];
         GameState.currentBoard = new int[9][9];
         GameState.isSaved = false;
+        GameState.isSolvedBySystem = false;
 
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
@@ -84,6 +88,10 @@ public class HelloController {
     }
 
     public void loadGame() {
+        btnSave.setDisable(false);
+        btnClear.setDisable(false);
+        GameState.isSolvedBySystem = false;
+
         startTime = System.currentTimeMillis();
         if (GameState.initialBoard == null || GameState.currentBoard == null) {
             return;
@@ -107,6 +115,7 @@ public class HelloController {
     }
 
     private void saveGame() {
+        if(GameState.isSolvedBySystem) return;
         for (int r = 0; r < 9; r++)
             for (int c = 0; c < 9; c++) {
                 String text = cells[r][c].getText();
@@ -119,6 +128,7 @@ public class HelloController {
     }
 
     private void clearGrid() {
+        if(GameState.isSolvedBySystem) return;
         if (GameState.initialBoard == null || GameState.currentBoard == null) {
             return;
         }
@@ -138,22 +148,32 @@ public class HelloController {
 
 
     private void solveSudoku() {
+        if(GameState.currentBoard == null) return;
+        GameState.isSolvedBySystem = true;
         int[][] board = copyBoard(GameState.currentBoard);
-        if (solve(board)) {
-            for (int r = 0; r < 9; r++)
-                for (int c = 0; c < 9; c++)
-                    cells[r][c].setText(String.valueOf(board[r][c]));
-            long endTime = System.currentTimeMillis();
-            int seconds = (int) ((endTime - startTime) / 1000);
-            TextInputDialog dialog = new TextInputDialog("Player");
-            dialog.setTitle("Solved!");
-            dialog.setHeaderText("Puzzle solved!");
-            dialog.setContentText("Enter your name:");
-            dialog.showAndWait().ifPresent(name -> ScoreBoardHelper.addScore(name, seconds));
-        } else {
+        if (!solve(board)) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Cannot solve this puzzle!");
             alert.showAndWait();
+            return;
         }
+
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                cells[r][c].setText(String.valueOf(board[r][c]));
+                cells[r][c].setEditable(false);
+            }
+        }
+
+        btnSave.setDisable(true);
+        btnClear.setDisable(true);
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Solved by System");
+        alert.setHeaderText("Game Terminated");
+        alert.setContentText("Game Over.");
+        alert.showAndWait();
+
+        GameState.isSaved = true;
     }
 
     private boolean solve(int[][] board) {

@@ -7,6 +7,8 @@ public class GameState {
     public static int[][] initialBoard;
     public static int[][] currentBoard;
 
+    public static Difficulty difficulty = Difficulty.EASY;
+
     private static final String SAVE_FILE = "sudoku_save.txt";
 
     public static boolean isSaved = true;
@@ -14,6 +16,8 @@ public class GameState {
     public static boolean hasSavedGame() {
         return new File(SAVE_FILE).exists();
     }
+
+    public static boolean isSolvedBySystem = false;
 
     public static void saveToFile() {
         if (initialBoard == null || currentBoard == null) return;

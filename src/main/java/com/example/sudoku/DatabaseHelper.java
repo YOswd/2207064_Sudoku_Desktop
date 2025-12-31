@@ -14,14 +14,15 @@ public class DatabaseHelper {
             st.execute("""
                CREATE TABLE IF NOT EXISTS sudoku_puzzles (
                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                   puzzle TEXT NOT NULL
+                   puzzle TEXT NOT NULL,
+                   difficulty TEXT NOT NULL
                )
             """);
 
             ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM sudoku_puzzles");
             if (rs.next() && rs.getInt(1) == 0) {
                 st.execute("""
-                   INSERT INTO sudoku_puzzles (puzzle) VALUES
+                   INSERT INTO sudoku_puzzles (puzzle, difficulty) VALUES
                    ('530070000600195000098000060800060003400803001700020006060000280000419005000080079'),
                    ('000260701680070090190004500820100040004602900050003028009300074040050036703018000'),
                    ('302609005000000300000003010700000006060708020900000001090500000004000000800402107'),
@@ -41,14 +42,20 @@ public class DatabaseHelper {
         }
     }
 
-    public static int[][] getRandomPuzzle() {
+    public static int[][] getRandomPuzzle(Difficulty difficulty) {
         int[][] board = new int[9][9];
         String puzzle = null;
 
+        String sql = """
+                SELECT puzzle FROM sudoku_puzzles
+                WHERE difficulty=?
+                ORDER BY RANDOM() LIMIT 1
+                """;
+
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(
-                     "SELECT puzzle FROM sudoku_puzzles ORDER BY RANDOM() LIMIT 1")) {
+             PreparedStatement st = conn.prepareStatement(sql)){
+             st.setString(1, difficulty.name());
+             ResultSet rs = st.executeQuery();
 
             if (rs.next()) puzzle = rs.getString("puzzle");
 
@@ -57,7 +64,6 @@ public class DatabaseHelper {
         }
 
         if (puzzle == null) {
-            System.out.println("No puzzle found in database! Using default puzzle.");
             puzzle = "530070000600195000098000060800060003400803001700020006060000280000419005000080079";
         }
 
