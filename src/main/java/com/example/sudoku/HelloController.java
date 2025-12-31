@@ -1,33 +1,31 @@
 package com.example.sudoku;
 
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+
+import java.io.File;
 
 public class HelloController {
 
     @FXML private GridPane grid;
-    @FXML private Button btnSolve, btnClear, btnNew, btnSave, btnExit;
+    @FXML private Button btnSolve, btnNew, btnExit, btnSave, btnClear;
 
     private TextField[][] cells = new TextField[9][9];
+    private long startTime;
+
+    private static final String SAVE_FILE = "sudoku_save.txt";
 
     @FXML
     public void initialize() {
         createGrid();
 
-        if (GameState.hasSavedGame() && GameState.loadFromFile()) {
-            loadSavedGame();
-        } else {
-            startNewGame();
-        }
-
         btnSolve.setOnAction(e -> solveSudoku());
-        btnClear.setOnAction(e -> clearGrid());
-        btnNew.setOnAction(e -> startNewGame());
-        btnSave.setOnAction(e -> saveGame());
+        btnNew.setOnAction(e -> startNewGameClicked());
         btnExit.setOnAction(e -> goToMenu());
+        btnSave.setOnAction(e -> saveGame());
+        btnClear.setOnAction(e -> clearGrid());
     }
 
     private void createGrid() {
@@ -36,10 +34,10 @@ public class HelloController {
                 TextField tf = new TextField();
                 tf.setPrefSize(50, 50);
                 tf.setStyle("-fx-font-size:18; -fx-alignment:center;");
+                final int row = r, col = c;
 
-                int row = r, col = c;
-                tf.textProperty().addListener((obs, o, n) -> {
-                    if (!n.matches("[1-9]?")) tf.setText(o);
+                tf.textProperty().addListener((obs, oldVal, newVal) -> {
+                    if (!newVal.matches("[1-9]?")) tf.setText(oldVal);
                 });
 
                 cells[r][c] = tf;
@@ -48,127 +46,150 @@ public class HelloController {
         }
     }
 
-    private void startNewGame() {
-        int[][] puzzle = {
-                {5,3,0,0,7,0,0,0,0},
-                {6,0,0,1,9,5,0,0,0},
-                {0,9,8,0,0,0,0,6,0},
-                {8,0,0,0,6,0,0,0,3},
-                {4,0,0,8,0,3,0,0,1},
-                {7,0,0,0,2,0,0,0,6},
-                {0,6,0,0,0,0,2,8,0},
-                {0,0,0,4,1,9,0,0,5},
-                {0,0,0,0,8,0,0,7,9}
-        };
+    private void startNewGameClicked() {
+        File saveFile = new File(SAVE_FILE);
 
-        GameState.initialBoard = copy(puzzle);
-        GameState.currentBoard = copy(puzzle);
-        loadBoard(GameState.initialBoard);
+        if (saveFile.exists()) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Start New Game");
+            alert.setHeaderText("Previous saved game will be discarded!");
+            alert.setContentText("Do you want to continue?");
+
+            ButtonType result = alert.showAndWait().orElse(ButtonType.CANCEL);
+            if (result != ButtonType.OK) return;
+
+            saveFile.delete();
+        }
+
+        startNewGame();
     }
 
-    private void loadSavedGame() {
-        loadBoard(GameState.currentBoard);
-    }
+    public void startNewGame() {
+        startTime = System.currentTimeMillis();
+        int[][] puzzle = DatabaseHelper.getRandomPuzzle();
 
-    private void loadBoard(int[][] board) {
+        GameState.initialBoard = new int[9][9];
+        GameState.currentBoard = new int[9][9];
+        GameState.isSaved = false;
+
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
-                TextField tf = cells[r][c];
-                int val = board[r][c];
-                if (val != 0) {
-                    tf.setText(String.valueOf(val));
-                    tf.setEditable(GameState.initialBoard[r][c] == 0);
-                } else {
-                    tf.clear();
-                    tf.setEditable(true);
-                }
+                int value = puzzle[r][c];
+                GameState.initialBoard[r][c] = value;
+                GameState.currentBoard[r][c] = value;
+                cells[r][c].setText(value == 0 ? "" : String.valueOf(value));
+                cells[r][c].setEditable(value == 0);
             }
         }
     }
 
-    private void saveGame() {
-        GameState.currentBoard = getBoard();
-        GameState.saveToFile();
-    }
-
-    private int[][] getBoard() {
-        int[][] b = new int[9][9];
-        for (int r = 0; r < 9; r++)
-            for (int c = 0; c < 9; c++)
-                b[r][c] = cells[r][c].getText().isEmpty()
-                        ? 0 : Integer.parseInt(cells[r][c].getText());
-        return b;
-    }
-
-    private int[][] copy(int[][] src) {
-        int[][] d = new int[9][9];
-        for (int i = 0; i < 9; i++)
-            System.arraycopy(src[i], 0, d[i], 0, 9);
-        return d;
-    }
-
-    private void solveSudoku() {
-        int[][] board = getBoard();
-
-        if (solve(board)) {
-            loadBoard(board);
-        } else {
-            System.out.println("No solution exists!");
+    public void loadGame() {
+        startTime = System.currentTimeMillis();
+        if (GameState.initialBoard == null || GameState.currentBoard == null) {
+            return;
         }
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                int value = GameState.currentBoard[r][c];
+                cells[r][c].setText(value == 0 ? "" : String.valueOf(value));
+                cells[r][c].setEditable(GameState.initialBoard[r][c] == 0);
+            }
+        }
+        GameState.isSaved = true;
     }
 
 
-    private boolean solve(int[][] b) {
+    private int[][] copyBoard(int[][] board) {
+        int[][] copy = new int[9][9];
+        for (int r = 0; r < 9; r++)
+            System.arraycopy(board[r], 0, copy[r], 0, 9);
+        return copy;
+    }
+
+    private void saveGame() {
+        for (int r = 0; r < 9; r++)
+            for (int c = 0; c < 9; c++) {
+                String text = cells[r][c].getText();
+                GameState.currentBoard[r][c] = text.isEmpty() ? 0 : Integer.parseInt(text);
+            }
+        GameState.saveToFile();
+        GameState.isSaved = true;
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, "Game saved successfully!");
+        alert.showAndWait();
+    }
+
+    private void clearGrid() {
+        if (GameState.initialBoard == null || GameState.currentBoard == null) {
+            return;
+        }
 
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
 
-                if (b[r][c] == 0) {
+                if (GameState.initialBoard[r][c] == 0) {
+                    cells[r][c].clear();
+                    GameState.currentBoard[r][c] = 0;
+                }
+            }
+        }
 
-                    for (int n = 1; n <= 9; n++) {
-                        if (isSafe(b, r, c, n)) {
-                            b[r][c] = n;
+        GameState.isSaved = false;
+    }
 
-                            if (solve(b)) {
-                                return true;
-                            }
 
-                            b[r][c] = 0;
+    private void solveSudoku() {
+        int[][] board = copyBoard(GameState.currentBoard);
+        if (solve(board)) {
+            for (int r = 0; r < 9; r++)
+                for (int c = 0; c < 9; c++)
+                    cells[r][c].setText(String.valueOf(board[r][c]));
+            long endTime = System.currentTimeMillis();
+            int seconds = (int) ((endTime - startTime) / 1000);
+            TextInputDialog dialog = new TextInputDialog("Player");
+            dialog.setTitle("Solved!");
+            dialog.setHeaderText("Puzzle solved!");
+            dialog.setContentText("Enter your name:");
+            dialog.showAndWait().ifPresent(name -> ScoreBoardHelper.addScore(name, seconds));
+        } else {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Cannot solve this puzzle!");
+            alert.showAndWait();
+        }
+    }
+
+    private boolean solve(int[][] board) {
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                if (board[r][c] == 0) {
+                    for (int num = 1; num <= 9; num++) {
+                        if (isValid(board, r, c, num)) {
+                            board[r][c] = num;
+                            if (solve(board)) return true;
+                            board[r][c] = 0;
                         }
                     }
-
                     return false;
                 }
             }
         }
-
         return true;
     }
 
-
-    private boolean isSafe(int[][] b, int r, int c, int n) {
+    private boolean isValid(int[][] board, int row, int col, int num) {
         for (int i = 0; i < 9; i++)
-            if (b[r][i] == n || b[i][c] == n) return false;
-        int sr = (r / 3) * 3, sc = (c / 3) * 3;
-        for (int i = sr; i < sr + 3; i++)
-            for (int j = sc; j < sc + 3; j++)
-                if (b[i][j] == n) return false;
+            if (board[row][i] == num || board[i][col] == num) return false;
+        int startRow = row - row % 3, startCol = col - col % 3;
+        for (int r = startRow; r < startRow + 3; r++)
+            for (int c = startCol; c < startCol + 3; c++)
+                if (board[r][c] == num) return false;
         return true;
     }
 
     private void goToMenu() {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("menu.fxml")
-            );
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("menu.fxml"));
             grid.getScene().setRoot(loader.load());
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-
-    private void clearGrid() {
-        startNewGame();
     }
 }

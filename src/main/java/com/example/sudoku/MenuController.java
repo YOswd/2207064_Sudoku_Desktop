@@ -2,60 +2,101 @@ package com.example.sudoku;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.stage.Stage;
+import javafx.scene.control.ButtonType;
+
+import java.io.File;
+import java.util.List;
 
 public class MenuController {
 
     @FXML private Button btnNewGame;
-    @FXML private Button btnResume;
+    @FXML private Button btnResumeGame;
+    @FXML private Button btnScoreboard;
     @FXML private Button btnExit;
+
+    private static final String SAVE_FILE = "sudoku_save.txt";
 
     @FXML
     public void initialize() {
-
-        btnNewGame.setOnAction(e -> {
-            GameState.clear();
-            openSudoku();
-        });
-
-        btnResume.setOnAction(e -> {
-            if (!GameState.hasSavedGame()) {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("No Saved Game");
-                alert.setHeaderText(null);
-                alert.setContentText("No saved game found!");
-                alert.showAndWait();
-            } else {
-                openSudoku();
-            }
-        });
-
-        btnExit.setOnAction(e -> goToWelcome());
+        btnNewGame.setOnAction(e -> openSudoku());
+        btnResumeGame.setOnAction(e -> resumeGame());
+        btnScoreboard.setOnAction(e -> showScoreboard());
+        btnExit.setOnAction(e -> goToHello());
     }
 
     private void openSudoku() {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("sudoku.fxml"));
-            Stage stage = (Stage) btnNewGame.getScene().getWindow();
-            stage.setScene(new Scene(root));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
+            File saveFile = new File(SAVE_FILE);
 
-    private void goToWelcome() {
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("hello-view.fxml")
-            );
-            btnExit.getScene().setRoot(loader.load());
+            if (saveFile.exists()) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Start New Game");
+                alert.setHeaderText("Previous saved game will be discarded!");
+                alert.setContentText("Do you want to continue?");
+                ButtonType result = alert.showAndWait().orElse(ButtonType.CANCEL);
+                if (result != ButtonType.OK) return;
+
+                saveFile.delete();
+            }
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("Sudoku.fxml"));
+            btnNewGame.getScene().setRoot(loader.load());
+            HelloController controller = loader.getController();
+            controller.startNewGame();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private void resumeGame() {
+        File saveFile = new File(SAVE_FILE);
+
+        if (!saveFile.exists()) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Resume Game");
+            alert.setHeaderText(null);
+            alert.setContentText("No saved game found!");
+            alert.showAndWait();
+            return;
+        }
+
+        if (!GameState.loadFromFile()) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Resume Game");
+            alert.setHeaderText(null);
+            alert.setContentText("Failed to load saved game.");
+            alert.showAndWait();
+            return;
+        }
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("Sudoku.fxml"));
+            btnResumeGame.getScene().setRoot(loader.load());
+            HelloController controller = loader.getController();
+            controller.loadGame();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showScoreboard() {
+        List<String> scores = ScoreBoardHelper.getScores();
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Scoreboard");
+        alert.setHeaderText("Best Scores");
+        alert.setContentText(scores.isEmpty() ? "No scores yet!" : String.join("\n", scores));
+        alert.showAndWait();
+    }
+
+    private void goToHello() {
+        try {
+            btnExit.getScene().setRoot(
+                    FXMLLoader.load(getClass().getResource("hello-view.fxml"))
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

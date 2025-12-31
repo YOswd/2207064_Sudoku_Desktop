@@ -9,10 +9,10 @@ public class HelloApplication extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        Scene scene = new Scene(
-                FXMLLoader.load(getClass().getResource("hello-view.fxml")),
-                500, 600
+        FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("hello-view.fxml")
         );
+        Scene scene = new Scene(loader.load(), 500, 600);
         stage.setTitle("Sudoku Desktop App");
         stage.setScene(scene);
         stage.show();

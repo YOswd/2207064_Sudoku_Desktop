@@ -11,6 +11,8 @@ module com.example.sudoku {
     requires eu.hansolo.tilesfx;
     requires com.almasb.fxgl.all;
 
+    requires java.sql;
+
     opens com.example.sudoku to javafx.fxml;
     exports com.example.sudoku;
 }

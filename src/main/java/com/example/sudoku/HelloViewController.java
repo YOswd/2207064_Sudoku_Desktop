@@ -9,23 +9,26 @@ import javafx.stage.Stage;
 
 public class HelloViewController {
 
-    @FXML
-    private Button btnPlay;
-
-    @FXML
-    private Button btnExit;
+    @FXML private Button btnPlay;
+    @FXML private Button btnExit;
 
     @FXML
     public void initialize() {
+        System.out.println("HelloViewController loaded");
+
         btnPlay.setOnAction(e -> openMenu());
         btnExit.setOnAction(e -> exitGame());
     }
 
     private void openMenu() {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("menu.fxml"));
+            Parent root = FXMLLoader.load(
+                    getClass().getResource("menu.fxml")
+            );
+
             Stage stage = (Stage) btnPlay.getScene().getWindow();
             stage.setScene(new Scene(root));
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
