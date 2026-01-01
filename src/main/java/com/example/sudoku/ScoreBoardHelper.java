@@ -42,13 +42,14 @@ public class ScoreBoardHelper {
         }
     }
 
-    public static List<String> getScores() {
+    public static List<String> getScores(Difficulty difficulty) {
         List<String> list = new ArrayList<>();
         String sql = "SELECT * FROM scoreboard WHERE difficulty=? ORDER BY time_taken ASC";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
+             PreparedStatement st = conn.prepareStatement(sql)){
+             st.setString(1, difficulty.name());
+             ResultSet rs = st.executeQuery();
 
             while (rs.next()) {
                 list.add(
@@ -62,5 +63,19 @@ public class ScoreBoardHelper {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public static void resetScoreboard(Difficulty difficulty) {
+        String sql = "DELETE FROM scoreboard WHERE difficulty = ?";
+
+        try(Connection conn = DriverManager.getConnection(DB_URL);
+        PreparedStatement st = conn.prepareStatement(sql)) {
+
+        st.setString(1, difficulty.name());
+        st.executeUpdate();
+
+        } catch (SQLException e) {
+           e.printStackTrace();
+        }
     }
 }

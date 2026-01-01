@@ -37,7 +37,12 @@ public class HelloController {
                 final int row = r, col = c;
 
                 tf.textProperty().addListener((obs, oldVal, newVal) -> {
-                    if (!newVal.matches("[1-9]?")) tf.setText(oldVal);
+                    if (!newVal.matches("[1-9]?")) {
+                        tf.setText(oldVal);
+                        return;
+                    }
+
+                    validateConflicts(row, col);
                 });
 
                 cells[r][c] = tf;
@@ -46,8 +51,40 @@ public class HelloController {
         }
     }
 
+    private void resetCellStyles() {
+        for(int r = 0; r < 9; r++)
+        {
+            for(int c=0; c<9; c++) cells[r][c].setStyle("-fx-font-size: 18; -fx-alignment: center");
+        }
+    }
+
+    private void validateConflicts(int row, int col) {
+        resetCellStyles();
+        String value = cells[row][col].getText();
+        if(value.isEmpty()) return;
+
+        for(int c = 0; c < 9; c++) {
+            if(c != col && value.equals(cells[row][c].getText())) {
+                markRed(row, col);
+                markRed(row, c);
+            }
+        }
+
+        for(int r = 0; r < 9; r++) {
+            if(value.equals(cells[r][col].getText())) {
+                markRed(row, col);
+                markRed(r, col);
+            }
+        }
+    }
+
+    private void markRed(int r, int c) {
+        cells[r][c].setStyle("-fx-font-size: 18; -fx-alignment: center;" + "-fx-background-color: #ffb3b3;"
+        + "-fx-border-color: red;" + "-fx-border-width: 2");
+    }
+
     private void startNewGameClicked() {
-        File saveFile = new File(SAVE_FILE);
+        File saveFile = new File(GameState.getSaveFile());
 
         if (saveFile.exists()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
