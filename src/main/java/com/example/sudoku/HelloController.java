@@ -42,7 +42,33 @@ public class HelloController {
                         return;
                     }
 
-                    validateConflicts(row, col);
+                    if(newVal.isEmpty()) {
+                        tf.setStyle("-fx-background-color: white;");
+                        return;
+                    }
+
+                    if(!tf.isEditable()) return;
+
+                    int num = Integer.parseInt(newVal);
+                    boolean duplicate = false;
+
+                    for(int i = 0; i < 9; i++) {
+                        if(i != col && num == parseIntOrZero(cells[row][i].getText())) {
+                            duplicate = true;
+                            break;
+                        }
+                    }
+
+                    if(!duplicate) {
+                        for(int i = 0; i < 9; i++) {
+                            if(i != row && num == parseIntOrZero(cells[i][col].getText())) {
+                                duplicate = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    tf.setStyle("-fx-font-size: 18; -fx-alignment: center;" + (duplicate? "-fx-background-color: pink;": "-fx-background-color: white;"));
                 });
 
                 cells[r][c] = tf;
@@ -51,36 +77,13 @@ public class HelloController {
         }
     }
 
-    private void resetCellStyles() {
-        for(int r = 0; r < 9; r++)
-        {
-            for(int c=0; c<9; c++) cells[r][c].setStyle("-fx-font-size: 18; -fx-alignment: center");
+    private static int parseIntOrZero(String s) {
+        if(s == null || s.isEmpty()) return 0;
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            return 0;
         }
-    }
-
-    private void validateConflicts(int row, int col) {
-        resetCellStyles();
-        String value = cells[row][col].getText();
-        if(value.isEmpty()) return;
-
-        for(int c = 0; c < 9; c++) {
-            if(c != col && value.equals(cells[row][c].getText())) {
-                markRed(row, col);
-                markRed(row, c);
-            }
-        }
-
-        for(int r = 0; r < 9; r++) {
-            if(value.equals(cells[r][col].getText())) {
-                markRed(row, col);
-                markRed(r, col);
-            }
-        }
-    }
-
-    private void markRed(int r, int c) {
-        cells[r][c].setStyle("-fx-font-size: 18; -fx-alignment: center;" + "-fx-background-color: #ffb3b3;"
-        + "-fx-border-color: red;" + "-fx-border-width: 2");
     }
 
     private void startNewGameClicked() {
@@ -120,6 +123,7 @@ public class HelloController {
                 GameState.currentBoard[r][c] = value;
                 cells[r][c].setText(value == 0 ? "" : String.valueOf(value));
                 cells[r][c].setEditable(value == 0);
+                cells[r][c].setStyle("-fx-font-size: 18; -fx-alignment: center; -fx-background-color: white");
             }
         }
     }
