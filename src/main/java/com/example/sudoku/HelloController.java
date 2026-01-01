@@ -42,33 +42,7 @@ public class HelloController {
                         return;
                     }
 
-                    if(newVal.isEmpty()) {
-                        tf.setStyle("-fx-background-color: white;");
-                        return;
-                    }
-
-                    if(!tf.isEditable()) return;
-
-                    int num = Integer.parseInt(newVal);
-                    boolean duplicate = false;
-
-                    for(int i = 0; i < 9; i++) {
-                        if(i != col && num == parseIntOrZero(cells[row][i].getText())) {
-                            duplicate = true;
-                            break;
-                        }
-                    }
-
-                    if(!duplicate) {
-                        for(int i = 0; i < 9; i++) {
-                            if(i != row && num == parseIntOrZero(cells[i][col].getText())) {
-                                duplicate = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    tf.setStyle("-fx-font-size: 18; -fx-alignment: center;" + (duplicate? "-fx-background-color: pink;": "-fx-background-color: white;"));
+                    refreshAllConflicts();
                 });
 
                 cells[r][c] = tf;
@@ -84,6 +58,47 @@ public class HelloController {
         } catch (NumberFormatException e) {
             return 0;
         }
+    }
+
+    private void refreshAllConflicts() {
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) cells[r][c].setStyle("-fx-font-size: 18; -fx-alignment: center; -fx-background-color: white;");
+        }
+
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++)
+                if (!cells[r][c].getText().isEmpty()) checkCellConflict(r, c);
+        }
+    }
+
+    private void checkCellConflict(int row, int col) {
+        String text = cells[row][col].getText();
+        if (text.isEmpty()) return;
+
+        int num = Integer.parseInt(text);
+
+        for (int c = 0; c < 9; c++) {
+            if (c != col && num == parseIntOrZero(cells[row][c].getText())) {
+                markConflict(row, col);
+                markConflict(row, c);
+            }
+        }
+
+        for (int r = 0; r < 9; r++) {
+            if (r != row && num == parseIntOrZero(cells[r][col].getText())) {
+                markConflict(row, col);
+                markConflict(r, col);
+            }
+        }
+    }
+
+    private void markConflict(int r, int c) {
+        cells[r][c].setStyle(
+                "-fx-font-size: 18; -fx-alignment: center;" +
+                        "-fx-background-color: #ffb3b3;" +
+                        "-fx-border-color: red;" +
+                        "-fx-border-width: 2;"
+        );
     }
 
     private void startNewGameClicked() {
@@ -146,7 +161,6 @@ public class HelloController {
         }
         GameState.isSaved = true;
     }
-
 
     private int[][] copyBoard(int[][] board) {
         int[][] copy = new int[9][9];

@@ -34,7 +34,7 @@ public class MenuController {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("Start New Game");
                 alert.setHeaderText("Previous saved game will be discarded!");
-                alert.setContentText("Do you want to continue?");
+                alert.setContentText("Do you wish to continue?");
                 ButtonType result = alert.showAndWait().orElse(ButtonType.CANCEL);
                 if (result != ButtonType.OK) return;
 
