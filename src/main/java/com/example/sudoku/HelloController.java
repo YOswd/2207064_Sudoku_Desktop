@@ -2,8 +2,10 @@ package com.example.sudoku;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.text.Font;
 
 import java.io.File;
 
@@ -33,8 +35,16 @@ public class HelloController {
             for (int c = 0; c < 9; c++) {
                 TextField tf = new TextField();
                 tf.setPrefSize(50, 50);
-                tf.setStyle("-fx-font-size:18; -fx-alignment:center;");
-                final int row = r, col = c;
+                tf.setAlignment(Pos.CENTER);
+                tf.setFont(Font.font(18));
+
+                int top = (r % 3 == 0) ? 3 : 1;
+                int left = (c % 3 == 0) ? 3 : 1;
+                int right = (r == 8) ? 3 : 1;
+                int bottom = (c == 8) ? 3 : 1;
+
+                tf.setStyle("-fx-border-color: red;" + "-fx-border-width: "
+                        + top + " " + right + " " + bottom + " " + left + " " + "-fx-background-color: white;");
 
                 tf.textProperty().addListener((obs, oldVal, newVal) -> {
                     if (!newVal.matches("[1-9]?")) {
@@ -43,6 +53,8 @@ public class HelloController {
                     }
 
                     refreshAllConflicts();
+
+                    if(isGameCompletedCorrectly()) onGameCompleted();
                 });
 
                 cells[r][c] = tf;
@@ -88,6 +100,19 @@ public class HelloController {
             if (r != row && num == parseIntOrZero(cells[r][col].getText())) {
                 markConflict(row, col);
                 markConflict(r, col);
+            }
+        }
+
+        int startRow = row - row % 3;
+        int startCol = col - col % 3;
+
+        for (int r = startRow; r < startRow + 3; r++) {
+            for (int c = startCol; c < startCol + 3; c++) {
+                if ((r != row || c != col) &&
+                        num == parseIntOrZero(cells[r][c].getText())) {
+                    markConflict(row, col);
+                    markConflict(r, c);
+                }
             }
         }
     }
@@ -201,11 +226,10 @@ public class HelloController {
         GameState.isSaved = false;
     }
 
-
     private void solveSudoku() {
         if(GameState.currentBoard == null) return;
         GameState.isSolvedBySystem = true;
-        int[][] board = copyBoard(GameState.currentBoard);
+        int[][] board = copyBoard(GameState.initialBoard);
         if (!solve(board)) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Cannot solve this puzzle!");
             alert.showAndWait();
@@ -266,5 +290,56 @@ public class HelloController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean isGameCompletedCorrectly() {
+        int[][] board = getCurrentBoard();
+
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                if (board[r][c] == 0) return false;
+
+                int num = board[r][c];
+                board[r][c] = 0;
+
+                if (!isValid(board, r, c, num)) {
+                    return false;
+                }
+
+                board[r][c] = num;
+            }
+        }
+        return true;
+    }
+
+    private int[][] getCurrentBoard() {
+        int[][] board = new int[9][9];
+        for (int r = 0; r < 9; r++)
+            for (int c = 0; c < 9; c++)
+                board[r][c] = parseIntOrZero(cells[r][c].getText());
+        return board;
+    }
+
+    private void onGameCompleted() {
+        if(GameState.isSolvedBySystem) return;
+
+        btnSave.setDisable(true);
+        btnClear.setDisable(true);
+        btnNew.setDisable(true);
+
+        int timeTaken = (int) ((System.currentTimeMillis() - startTime) / 1000);
+
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Congratulations!");
+        dialog.setHeaderText("You solved the puzzle!");
+        dialog.setContentText("Enter your name:");
+
+        dialog.showAndWait().ifPresent(name -> {
+            ScoreBoardHelper.addScore(name, timeTaken);
+            goToMenu();
+        });
+
+        if (GameState.isSaved) return;
+        GameState.isSaved = true;
     }
 }

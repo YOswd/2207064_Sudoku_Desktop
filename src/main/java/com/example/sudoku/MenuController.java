@@ -107,6 +107,7 @@ public class MenuController {
         dialog.showAndWait().ifPresent(selected -> {
             GameState.difficulty = selected;
 
+            GameState.clear();
             new Alert(Alert.AlertType.INFORMATION,"Difficulty set to: " + selected).show();
         });
     }

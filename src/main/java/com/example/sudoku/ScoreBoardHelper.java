@@ -16,6 +16,7 @@ public class ScoreBoardHelper {
             st.execute("""
                 CREATE TABLE IF NOT EXISTS scoreboard (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    difficulty TEXT NOT NULL,
                     player_name TEXT NOT NULL,
                     time_taken INTEGER NOT NULL,
                     played_on TEXT NOT NULL
@@ -33,8 +34,9 @@ public class ScoreBoardHelper {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, GameState.difficulty.name());
-            ps.setInt(2, seconds);
-            ps.setString(3, LocalDate.now().toString());
+            ps.setString(2, name);
+            ps.setInt(3, seconds);
+            ps.setString(4, LocalDate.now().toString());
             ps.executeUpdate();
 
         } catch (SQLException e) {
