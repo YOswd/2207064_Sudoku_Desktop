@@ -11,7 +11,7 @@
 
     <center>
         <StackPane BorderPane.alignment="CENTER">
-            <GridPane fx:id="grid" hgap="2" style="-fx-background-color: black;" vgap="2">
+            <GridPane fx:id="grid" hgap="2" style="-fx-background-color: white;" vgap="2" alignment="CENTER">
                 <padding>
                     <Insets bottom="10" left="10" right="10" top="10" />
                 </padding>
@@ -20,7 +20,7 @@
     </center>
 
     <bottom>
-        <HBox spacing="15" BorderPane.alignment="CENTER">
+        <HBox spacing="15" alignment="CENTER" BorderPane.alignment="CENTER" style="fx-padding: 10;">
             <Button fx:id="btnSolve" text="Solve" />
             <Button fx:id="btnClear" text="Clear" />
             <Button fx:id="btnNew" text="New Puzzle" />

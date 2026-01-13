@@ -5,6 +5,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
 
 import java.io.File;
@@ -21,7 +23,16 @@ public class HelloController {
 
     @FXML
     public void initialize() {
+        StackPane.setAlignment(grid, Pos.CENTER);
+        grid.setStyle("-fx-background-color: black; -fx-background-radius: 10;");
+        grid.setPrefSize(450, 450);
+
+
         createGrid();
+
+        grid.setMinSize(450, 450);
+        grid.setPrefSize(450, 450);
+        grid.setMaxSize(450, 450);
 
         btnSolve.setOnAction(e -> solveSudoku());
         btnNew.setOnAction(e -> startNewGameClicked());
@@ -37,6 +48,10 @@ public class HelloController {
                 tf.setPrefSize(50, 50);
                 tf.setAlignment(Pos.CENTER);
                 tf.setFont(Font.font(18));
+
+                tf.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+                GridPane.setHgrow(tf, Priority.ALWAYS);
+                GridPane.setVgrow(tf, Priority.ALWAYS);
 
                 int top = (r % 3 == 0) ? 3 : 1;
                 int left = (c % 3 == 0) ? 3 : 1;

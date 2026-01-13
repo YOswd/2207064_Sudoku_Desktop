@@ -5,22 +5,25 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
+<?import javafx.scene.layout.VBox?>
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="519.0" prefWidth="477.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.sudoku.HelloViewController">
    <children>
-      <Button fx:id="btnPlay" layoutX="186.0" layoutY="260.0" mnemonicParsing="false" prefHeight="33.0" prefWidth="105.0" text="Play" textFill="#12c915">
-         <font>
-            <Font name="Broadway" size="14.0" />
-         </font>
-      </Button>
-      <Label layoutX="100.0" layoutY="111.0" text="Welcome To Sudoku World" textFill="#2f18d9">
-         <font>
-            <Font name="Copperplate Gothic Bold" size="18.0" />
-         </font>
-      </Label>
-      <Button fx:id="btnExit" layoutX="185.0" layoutY="344.0" mnemonicParsing="false" prefHeight="33.0" prefWidth="105.0" text="Exit" textFill="#ce1717">
-         <font>
-            <Font name="Broadway" size="14.0" />
-         </font>
-      </Button>
+       <VBox fx:id="vbox" alignment="CENTER" spacing="30" prefWidth="400" prefHeight="300" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+           <Label layoutX="100.0" layoutY="111.0" text="Welcome To Sudoku World" textFill="#2f18d9">
+               <font>
+                   <Font name="Copperplate Gothic Bold" size="18.0" />
+               </font>
+           </Label>
+           <Button fx:id="btnPlay" layoutX="186.0" layoutY="260.0" mnemonicParsing="false" prefHeight="33.0" prefWidth="105.0" text="Play" textFill="#12c915">
+               <font>
+                   <Font name="Broadway" size="14.0" />
+               </font>
+           </Button>
+           <Button fx:id="btnExit" layoutX="185.0" layoutY="344.0" mnemonicParsing="false" prefHeight="33.0" prefWidth="105.0" text="Exit" textFill="#ce1717">
+               <font>
+                   <Font name="Broadway" size="14.0" />
+               </font>
+           </Button>
+       </VBox>
    </children>
 </AnchorPane>
