@@ -1,9 +1,12 @@
 package com.example.sudoku;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ListView;
+
+import java.util.List;
 
 public class ScoreboardController {
 
@@ -12,32 +15,49 @@ public class ScoreboardController {
 
     @FXML
     public void initialize() {
-        loadScores();
+        refreshScores();
     }
 
-    private void loadScores() {
+    private void refreshScores() {
         listView.getItems().clear();
-        listView.getItems().addAll(
-                ScoreBoardHelper.getScores(GameState.difficulty)
-        );
+
+        List<String> scores = ScoreBoardHelper.getScores(GameState.difficulty);
+
+        if (scores.isEmpty()) {
+            listView.getItems().add("No scores yet!");
+            return;
+        }
+
+        int rank = 1;
+        for (String s : scores) {
+            if (rank > 10) break;
+            listView.getItems().add(rank + ". " + s);
+            rank++;
+        }
     }
 
     @FXML
     private void onResetClicked() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Reset Scoreboard");
+        alert.setHeaderText("Reset scores for " + GameState.difficulty + "?");
+        alert.setContentText("This action cannot be undone.");
 
-        Alert alert = new Alert(
-                Alert.AlertType.CONFIRMATION,
-                "Reset scores for " + GameState.difficulty + "?"
-        );
+        alert.showAndWait().ifPresent(result -> {
+            if (result == ButtonType.OK) {
+                ScoreBoardHelper.resetScoreboard(GameState.difficulty);
+                refreshScores();
+            }
+        });
+    }
 
-        alert.setTitle("Confirm Reset");
-        alert.setHeaderText("This will delete all scores");
-
-        if (alert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK)
-            return;
-
-        ScoreBoardHelper.resetScoreboard(GameState.difficulty);
-
-        loadScores();
+    @FXML
+    private void onBackClicked() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("menu.fxml"));
+            listView.getScene().setRoot(loader.load());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

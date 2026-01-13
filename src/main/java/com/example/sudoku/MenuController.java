@@ -88,12 +88,13 @@ public class MenuController {
     }
 
     private void showScoreboard() {
-        List<String> scores = ScoreBoardHelper.getScores(GameState.difficulty);
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Scoreboard - " + GameState.difficulty);
-        alert.setHeaderText("Best Scores (" + GameState.difficulty + ")");
-        alert.setContentText(scores.isEmpty() ? "No scores yet!" : String.join("\n", scores));
-        alert.showAndWait();
+        try {
+            FXMLLoader loader =
+                    new FXMLLoader(getClass().getResource("Scoreboard.fxml"));
+            btnScoreboard.getScene().setRoot(loader.load());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void showDifficultyDialog() {
