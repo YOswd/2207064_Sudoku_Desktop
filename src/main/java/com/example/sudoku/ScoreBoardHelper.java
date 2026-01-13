@@ -29,14 +29,14 @@ public class ScoreBoardHelper {
     }
 
     public static void addScore(String name, int seconds) {
-        String sql = "INSERT INTO scoreboard VALUES(NULL,?,?,?)";
+        String sql = "INSERT INTO scoreboard (difficulty, player_name, time_taken, played_on) VALUES(?,?,?,?)";
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, GameState.difficulty.name());
             ps.setString(2, name);
             ps.setInt(3, seconds);
-            ps.setString(4, LocalDate.now().toString());
+            ps.setString(4, java.time.LocalDate.now().toString());
             ps.executeUpdate();
 
         } catch (SQLException e) {
