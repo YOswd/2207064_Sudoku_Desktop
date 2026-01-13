@@ -128,23 +128,23 @@ public class HelloController {
             }
         }
 
-        if (selectedRow == -1 || selectedCol == -1) return;
-
-        for (int i = 0; i < 9; i++) {
-            highlightCell(selectedRow, i, COLOR_RELATED);
-            highlightCell(i, selectedCol, COLOR_RELATED);
-        }
-
-        int startRow = selectedRow - selectedRow % 3;
-        int startCol = selectedCol - selectedCol % 3;
-
-        for (int r = startRow; r < startRow + 3; r++) {
-            for (int c = startCol; c < startCol + 3; c++) {
-                highlightCell(r, c, COLOR_RELATED);
+        if (selectedRow != -1 && selectedCol != -1) {
+            for (int i = 0; i < 9; i++) {
+                highlightCell(selectedRow, i, COLOR_RELATED);
+                highlightCell(i, selectedCol, COLOR_RELATED);
             }
-        }
 
-        highlightCell(selectedRow, selectedCol, COLOR_SELECTED);
+            int startRow = selectedRow - selectedRow % 3;
+            int startCol = selectedCol - selectedCol % 3;
+
+            for (int r = startRow; r < startRow + 3; r++) {
+                for (int c = startCol; c < startCol + 3; c++) {
+                    highlightCell(r, c, COLOR_RELATED);
+                }
+            }
+
+            highlightCell(selectedRow, selectedCol, COLOR_SELECTED);
+        }
 
         refreshAllConflicts();
     }
@@ -224,6 +224,8 @@ public class HelloController {
         btnClear.setDisable(false);
 
         elapsedTimeInSeconds = 0;
+        selectedRow = -1;
+        selectedCol = -1;
         startTime = System.currentTimeMillis();
         startTimer();
         int[][] puzzle = DatabaseHelper.getRandomPuzzle(GameState.difficulty);
@@ -243,6 +245,7 @@ public class HelloController {
                 cells[r][c].setStyle("-fx-font-size: 18; -fx-alignment: center; -fx-background-color: white");
             }
         }
+        grid.requestFocus();
     }
 
     public void loadGame() {
@@ -268,6 +271,7 @@ public class HelloController {
         }
 
        refreshAllConflicts();
+       grid.requestFocus();
 
         GameState.isSaved = true;
     }
@@ -334,6 +338,9 @@ public class HelloController {
 
         btnSave.setDisable(true);
         btnClear.setDisable(true);
+
+        if (timer != null) timer.stop();
+        timerLabel.setText("Time: 00:00");
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Solved by System");

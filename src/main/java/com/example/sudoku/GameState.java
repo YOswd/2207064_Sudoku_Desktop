@@ -50,22 +50,13 @@ public class GameState {
         return new File(getSaveFile()).exists();
     }
 
-    public static Difficulty getSavedDifficulty() {
-
-        for (Difficulty d : Difficulty.values()) {
-            File f = new File("sudoku_save_" + d.name() + ".txt");
-            if (f.exists()) {
-                return d;
-            }
-        }
-        return null;
-    }
-
     public static void clear() {
+        File f = new File(getSaveFile());
+        if (f.exists()) f.delete();
+
         initialBoard = null;
         currentBoard = null;
         isSaved = true;
-        new File(getSaveFile()).delete();
     }
 
     private static void writeBoard(PrintWriter pw, int[][] board) {

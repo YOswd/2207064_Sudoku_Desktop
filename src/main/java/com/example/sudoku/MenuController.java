@@ -51,40 +51,31 @@ public class MenuController {
     }
 
     private void resumeGame() {
-        Difficulty saved = GameState.getSavedDifficulty();
 
-        if (saved == null) {
+        if (!GameState.hasSavedGame()) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Resume Game");
             alert.setHeaderText(null);
-            alert.setContentText("No saved game found!");
+            alert.setContentText("No saved game found for " + GameState.difficulty);
             alert.showAndWait();
             return;
         }
 
-        ChoiceDialog<Difficulty> dialog = new ChoiceDialog<>(saved, Difficulty.values());
+        if (!GameState.loadFromFile()) {
+            new Alert(Alert.AlertType.ERROR,
+                    "Failed to load saved game.").showAndWait();
+            return;
+        }
 
-        dialog.setTitle("Resume Game");
-        dialog.setHeaderText("Select Difficulty to Resume");
-        dialog.setContentText("Difficulty: ");
-
-        dialog.showAndWait().ifPresent( diff ->{
-            GameState.difficulty = diff;
-
-            if (!GameState.loadFromFile()) {
-                new Alert(Alert.AlertType.ERROR,"Failed to load saved game.").showAndWait();
-                return;
-            }
-
-            try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("Sudoku.fxml"));
-                btnResumeGame.getScene().setRoot(loader.load());
-                HelloController controller = loader.getController();
-                controller.loadGame();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        try {
+            FXMLLoader loader =
+                    new FXMLLoader(getClass().getResource("Sudoku.fxml"));
+            btnResumeGame.getScene().setRoot(loader.load());
+            HelloController controller = loader.getController();
+            controller.loadGame();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void showScoreboard() {
@@ -108,7 +99,6 @@ public class MenuController {
         dialog.showAndWait().ifPresent(selected -> {
             GameState.difficulty = selected;
 
-            GameState.clear();
             new Alert(Alert.AlertType.INFORMATION,"Difficulty set to: " + selected).show();
         });
     }
