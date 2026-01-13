@@ -5,27 +5,25 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
 
 <BorderPane prefHeight="600" prefWidth="500" style="-fx-background-color: #f5f5f5;" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/25" fx:controller="com.example.sudoku.HelloController">
-
     <center>
-        <StackPane BorderPane.alignment="CENTER">
+        <VBox alignment="CENTER" spacing="20" BorderPane.alignment="CENTER">
+            <Label fx:id="timerLabel" text="Time: 00:00" style="-fx-font-size: 18px; -fx-font-weight: bold;" alignment="CENTER"/>
             <GridPane fx:id="grid" hgap="2" style="-fx-background-color: white;" vgap="2" alignment="CENTER">
                 <padding>
                     <Insets bottom="10" left="10" right="10" top="10" />
                 </padding>
             </GridPane>
-        </StackPane>
-    </center>
-
-    <bottom>
-        <HBox spacing="15" alignment="CENTER" BorderPane.alignment="CENTER" style="fx-padding: 10;">
+        <HBox spacing="15" alignment="CENTER">
             <Button fx:id="btnSolve" text="Solve" />
             <Button fx:id="btnClear" text="Clear" />
             <Button fx:id="btnNew" text="New Puzzle" />
             <Button fx:id="btnSave" text="Save" />
             <Button fx:id="btnExit" text="Exit" />
         </HBox>
-    </bottom>
+        </VBox>
+    </center>
 </BorderPane>

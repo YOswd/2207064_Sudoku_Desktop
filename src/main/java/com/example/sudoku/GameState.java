@@ -17,11 +17,14 @@ public class GameState {
 
     public static boolean isSolvedBySystem = false;
 
+    public static long elapsedTimeInSeconds = 0;
+
     public static void saveToFile() {
         if (initialBoard == null || currentBoard == null) return;
 
         try (PrintWriter pw = new PrintWriter(new FileWriter(getSaveFile()))) {
             pw.println(difficulty.name());
+            pw.println(elapsedTimeInSeconds);
             writeBoard(pw, initialBoard);
             writeBoard(pw, currentBoard);
             isSaved = true;
@@ -33,6 +36,7 @@ public class GameState {
     public static boolean loadFromFile() {
         try (BufferedReader br = new BufferedReader(new FileReader(getSaveFile()))) {
             difficulty = Difficulty.valueOf(br.readLine());
+            elapsedTimeInSeconds = Long.parseLong(br.readLine());
             initialBoard = readBoard(br);
             currentBoard = readBoard(br);
             isSaved = true;
@@ -83,5 +87,16 @@ public class GameState {
             }
         }
         return board;
+    }
+
+    public static void saveElapsedTime(long seconds) {
+        elapsedTimeInSeconds = seconds;
+        saveToFile();
+    }
+
+    public static long loadElapsedTime() {
+        if (!hasSavedGame()) return 0;
+        loadFromFile();
+        return elapsedTimeInSeconds;
     }
 }

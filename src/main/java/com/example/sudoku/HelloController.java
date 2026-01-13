@@ -1,5 +1,7 @@
 package com.example.sudoku;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
@@ -8,6 +10,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
+import javafx.util.Duration;
 
 import java.io.File;
 
@@ -15,11 +18,19 @@ public class HelloController {
 
     @FXML private GridPane grid;
     @FXML private Button btnSolve, btnNew, btnExit, btnSave, btnClear;
+    @FXML private Label timerLabel;
 
     private TextField[][] cells = new TextField[9][9];
     private long startTime;
+    private Timeline timer;
+    private long elapsedTimeInSeconds = 0;
 
-    private static final String SAVE_FILE = "sudoku_save.txt";
+    private static final String COLOR_SELECTED = "#3F51B5";
+    private static final String COLOR_RELATED = "#cfe8ff";
+    private static final String COLOR_NORMAL = "white";
+
+    private int selectedRow = -1;
+    private int selectedCol = -1;
 
     @FXML
     public void initialize() {
@@ -49,6 +60,15 @@ public class HelloController {
                 tf.setAlignment(Pos.CENTER);
                 tf.setFont(Font.font(18));
 
+                final int row = r;
+                final int col = c;
+
+                tf.setOnMouseClicked(e -> {
+                    selectedRow = row;
+                    selectedCol = col;
+                    refreshHighlights();
+                });
+
                 tf.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
                 GridPane.setHgrow(tf, Priority.ALWAYS);
                 GridPane.setVgrow(tf, Priority.ALWAYS);
@@ -67,7 +87,7 @@ public class HelloController {
                         return;
                     }
 
-                    refreshAllConflicts();
+                    refreshHighlights();
 
                     if(isGameCompletedCorrectly()) onGameCompleted();
                 });
@@ -89,14 +109,46 @@ public class HelloController {
 
     private void refreshAllConflicts() {
         for (int r = 0; r < 9; r++) {
-            for (int c = 0; c < 9; c++) cells[r][c].setStyle("-fx-font-size: 18; -fx-alignment: center; -fx-background-color: white;");
-        }
-
-        for (int r = 0; r < 9; r++) {
-            for (int c = 0; c < 9; c++)
-                if (!cells[r][c].getText().isEmpty()) checkCellConflict(r, c);
+            for (int c = 0; c < 9; c++) {
+                if (!cells[r][c].getText().isEmpty()) {
+                    checkCellConflict(r, c);
+                }
+            }
         }
     }
+
+    private void refreshHighlights() {
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                cells[r][c].setStyle(
+                        "-fx-font-size: 18; -fx-alignment: center;" +
+                                "-fx-background-color: " + COLOR_NORMAL + ";" +
+                                "-fx-border-color: black;"
+                );
+            }
+        }
+
+        if (selectedRow == -1 || selectedCol == -1) return;
+
+        for (int i = 0; i < 9; i++) {
+            highlightCell(selectedRow, i, COLOR_RELATED);
+            highlightCell(i, selectedCol, COLOR_RELATED);
+        }
+
+        int startRow = selectedRow - selectedRow % 3;
+        int startCol = selectedCol - selectedCol % 3;
+
+        for (int r = startRow; r < startRow + 3; r++) {
+            for (int c = startCol; c < startCol + 3; c++) {
+                highlightCell(r, c, COLOR_RELATED);
+            }
+        }
+
+        highlightCell(selectedRow, selectedCol, COLOR_SELECTED);
+
+        refreshAllConflicts();
+    }
+
 
     private void checkCellConflict(int row, int col) {
         String text = cells[row][col].getText();
@@ -132,6 +184,14 @@ public class HelloController {
         }
     }
 
+    private void highlightCell(int r, int c, String color) {
+        cells[r][c].setStyle(
+                "-fx-font-size: 18; -fx-alignment: center;" +
+                        "-fx-background-color: " + color + ";" +
+                        "-fx-border-color: black;"
+        );
+    }
+
     private void markConflict(int r, int c) {
         cells[r][c].setStyle(
                 "-fx-font-size: 18; -fx-alignment: center;" +
@@ -148,7 +208,7 @@ public class HelloController {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Start New Game");
             alert.setHeaderText("Previous saved game will be discarded!");
-            alert.setContentText("Do you want to continue?");
+            alert.setContentText("Do you wish to continue?");
 
             ButtonType result = alert.showAndWait().orElse(ButtonType.CANCEL);
             if (result != ButtonType.OK) return;
@@ -163,7 +223,9 @@ public class HelloController {
         btnSave.setDisable(false);
         btnClear.setDisable(false);
 
+        elapsedTimeInSeconds = 0;
         startTime = System.currentTimeMillis();
+        startTimer();
         int[][] puzzle = DatabaseHelper.getRandomPuzzle(GameState.difficulty);
 
         GameState.initialBoard = new int[9][9];
@@ -188,10 +250,15 @@ public class HelloController {
         btnClear.setDisable(false);
         GameState.isSolvedBySystem = false;
 
+        elapsedTimeInSeconds = GameState.loadElapsedTime();
         startTime = System.currentTimeMillis();
-        if (GameState.initialBoard == null || GameState.currentBoard == null) {
-            return;
-        }
+        startTimer();
+
+        if (GameState.initialBoard == null || GameState.currentBoard == null) return;
+
+        selectedCol = -1;
+        selectedRow = -1;
+
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
                 int value = GameState.currentBoard[r][c];
@@ -199,6 +266,9 @@ public class HelloController {
                 cells[r][c].setEditable(GameState.initialBoard[r][c] == 0);
             }
         }
+
+       refreshAllConflicts();
+
         GameState.isSaved = true;
     }
 
@@ -210,6 +280,10 @@ public class HelloController {
     }
 
     private void saveGame() {
+        elapsedTimeInSeconds += (System.currentTimeMillis() - startTime) / 1000;
+        startTime = System.currentTimeMillis();
+        GameState.saveElapsedTime(elapsedTimeInSeconds);
+
         if(GameState.isSolvedBySystem) return;
         for (int r = 0; r < 9; r++)
             for (int c = 0; c < 9; c++) {
@@ -356,5 +430,19 @@ public class HelloController {
 
         if (GameState.isSaved) return;
         GameState.isSaved = true;
+    }
+
+    private void startTimer() {
+        if (timer != null) timer.stop();
+
+        timer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            long totalElapsed = elapsedTimeInSeconds + (System.currentTimeMillis() - startTime) / 1000;
+            int minutes = (int) (totalElapsed / 60);
+            int seconds = (int) (totalElapsed % 60);
+            timerLabel.setText(String.format("Time: %02d:%02d", minutes, seconds));
+        }));
+
+        timer.setCycleCount(Timeline.INDEFINITE);
+        timer.play();
     }
 }
